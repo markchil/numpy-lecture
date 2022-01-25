@@ -1,0 +1,538 @@
+\documentclass[xcolor={x11names,table}]{beamer}
+
+\usepackage[overlay,absolute]{textpos}
+\setlength{\TPHorizModule}{1cm}
+\setlength{\TPVertModule}{1cm}
+
+\usepackage[version=4]{mhchem}
+
+\mode<presentation>
+{
+\usetheme{default}
+\useinnertheme{circles}
+\setbeamercovered{transparent}
+}
+
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamertemplate{enumerate items}[default]
+
+\setbeamertemplate{footline}{%
+	\hfill\scriptsize\textsf{\insertframenumber{}/\inserttotalframenumber}\hspace{0.1cm}\vspace{0.1cm}%
+}
+
+\usecolortheme{beaver}
+\setbeamercolor{enumerate item}{fg=darkred}
+\setbeamercolor{enumerate subitem}{fg=darkred}
+\setbeamercolor{enumerate subsubitem}{fg=darkred}
+\setbeamercolor{itemize item}{fg=darkred}
+\setbeamercolor{itemize subitem}{fg=darkred}
+\setbeamercolor{itemize subsubitem}{fg=darkred}
+\setbeamercolor{section number projected}{bg=darkred}
+
+\usepackage{graphicx}
+\usepackage{url}
+\urlstyle{same}
+
+\usepackage[separate-uncertainty=true,detect-none,mode=text]{siunitx}
+
+\usepackage{listings}
+%\usepackage{lstlinebgrd}
+\lstset{numbersep=4pt, %
+	language=Python, % {[ANSI]C}, {[ISO]C++}, {[90]Fortran}, Python, IDL, Java, bash, sh
+	numbers=left, % set to none to get rid of line numbers by default
+	basicstyle=\ttfamily\small, % \footnotesize
+	%keywordstyle=\color{blue}, %
+	%identifierstyle=\color{RoyalBlue4}, %
+	commentstyle=\color{Green4}, %
+	stringstyle=\color{violet}, %
+	showstringspaces=false, % set to true to show spaces visually
+	numberstyle=\ttfamily\tiny\color{red}, %
+	breaklines=true, %
+	tabsize=4, %
+	inputpath=../src/cell_files
+}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+\usetikzlibrary{fit}
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\usepackage{booktabs}
+
+\newcommand{\stabletitle}{Scientific Computing in Python:\\A NumPy Crash-Course Cluedump}
+
+\title{\stabletitle}
+
+\author[markchil] 
+{Mark Chilenski\\(markchil)}
+
+\date{January 25, 2022}
+
+\usepackage{ragged2e}
+
+\newcommand{\diff}{\ensuremath{\mathsf{d}}}
+\newcommand{\eu}[1][]{\ensuremath{\mathsf{e}^{#1}}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\TT}{\ensuremath{\mathsf{T}}}
+
+\newcommand{\vect}[1]{\mathbfsf{#1}}
+\newcommand{\tens}[1]{\mathbf{#1}}
+
+\DeclareMathOperator{\corr}{corr}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\newcommand{\todo}[1]{\textcolor{red}{\large\bfseries #1}}
+
+\graphicspath{{../graphics/}}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{\stabletitle}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+ 	\titlepage
+	
+	\begin{center}
+		\item You can download the code to follow along at: \url{https://github.com/markchil/numpy-lecture}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Intro}
+	Goals for today:
+	\begin{itemize}
+		\item Introduce the core elements of NumPy
+		\item Show how to write clean, fast code using NumPy
+	\end{itemize}
+	Prerequisites:
+	\begin{itemize}
+		\item Basic familiarity with Python
+	\end{itemize}
+	You can download the code to follow along at: \url{https://github.com/markchil/numpy-lecture}
+\end{frame}
+
+\begin{frame}
+	\frametitle{\stabletitle}
+	\tableofcontents
+\end{frame}
+
+\section{Background and Motivating Example}
+
+\begin{frame}
+	\frametitle{What Is NumPy?}
+	\begin{itemize}
+		\item NumPy is the main Python package for performing numerical computations
+		\item NumPy provides data structures which enable efficient manipulation of arrays of data with expressive syntax
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Motivating Example:\\Evaluating $z=ax^{2}+by^{2}+cxy$ Over a 2d Grid}
+	Without NumPy, setting up the $x$ and $y$ grids is pretty ugly:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_3.py}
+	
+	Evaluating the function itself requires nested for-loops:
+	\lstinputlisting[firstline=4,firstnumber=3]{examples_annotated_4.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Evaluating $z=ax^{2}+by^{2}+cxy$ Over a 2d Grid With NumPy}
+	First, we import NumPy:
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_1.py}
+	
+	Defining our grids is easy with \texttt{np.linspace}:
+	\lstinputlisting[firstline=4,lastline=6,firstnumber=2]{examples_annotated_6.py}
+	
+	And evaluating the function itself requires no loops:
+	\lstinputlisting[firstline=4,firstnumber=4]{examples_annotated_7.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Performance Comparison}
+	\begin{center}
+		\begin{tabular}{rl}
+			Pure Python: & \SI{14.2}{ms}\\
+			NumPy: & \SI{138}{\micro s}\\
+		\end{tabular}
+	\end{center}
+	\begin{itemize}
+		\item The NumPy solution is not only cleaner (no nested for-loops), it is \emph{100$\times$ faster}
+		\item NumPy obtains this speed by performing the majority of its operations in fast, compiled C/Fortran code: you write your code in Python, but NumPy does the heavy lifting in compiled libraries
+	\end{itemize}
+\end{frame}
+
+\section{Storing $N$-Dimensional Data: The \texttt{ndarray} Class}
+
+\begin{frame}
+	\frametitle{The \texttt{ndarray} Class}
+	\begin{itemize}
+		\item The \texttt{ndarray} class stores arrays of $N$-dimensional data
+		\begin{itemize}
+			\item Usually just called ``array'' or ``numpy array''
+		\end{itemize}
+		\item A given array \texttt{x} consists of:
+		\begin{itemize}
+			\item A chunk of memory
+			\item A datatype which indicates what type of value is stored in the memory (\texttt{x.dtype})
+			\item A shape which indicates how the elements are arranged in an $N$-dimensional grid (\texttt{x.shape})
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\section{Creating Arrays}
+
+\begin{frame}
+	\frametitle{Creating Arrays From Pure Python Data Structures}
+	\begin{itemize}
+		\item Create an array from an existing list:
+		\lstinputlisting[firstline=4,lastline=7]{examples_annotated_9.py}
+		\begin{itemize}
+			\item NumPy tries to guess the \texttt{dtype} based on the input: need to specify \texttt{dtype=float} here to avoid defaulting to \texttt{int} based on the input
+		\end{itemize}
+		\item Create a 2d array using nested lists:
+		\lstinputlisting[firstline=4,lastline=9]{examples_annotated_10.py}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Creating Arrays With Specified Shapes}
+	\begin{itemize}
+		\item Create an array of zeros:
+		\lstinputlisting[firstline=4,lastline=10]{examples_annotated_11.py}
+		\item Create an array of ones:
+		\lstinputlisting[firstline=4,lastline=6]{examples_annotated_12.py}
+	\end{itemize}
+\end{frame}
+
+%\begin{frame}
+%	\frametitle{Creating an Array From Another Array}
+%	\begin{itemize}
+%		\item Create an array with the same shape and dtype as another array:
+%		\lstinputlisting[firstline=4,lastline=12]{examples_annotated_13.py}
+%		\item You can also override the dtype:
+%		\lstinputlisting[firstline=4,lastline=6]{examples_annotated_14.py}
+%	\end{itemize}
+%\end{frame}
+
+\begin{frame}
+	\frametitle{Creating Grids of Numbers}
+	\begin{itemize}
+		\item We already saw how to create linearly-spaced numbers:
+		\lstinputlisting[firstline=4,lastline=6]{examples_annotated_15.py}
+		\item We can also create logarithmically-spaced numbers:
+		\lstinputlisting[firstline=4,lastline=6]{examples_annotated_16.py}
+		\begin{itemize}
+			\item You specify the \emph{exponent} of the starting and ending points
+			\item The default base is 10, you can change this with the \texttt{base} keyword
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\section{Indexing: Getting Elements Into (and out of) Arrays}
+
+\begin{frame}
+	\frametitle{Indexing Into 1d Arrays}
+	You can index into 1d arrays just like with Python lists:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_18.py}
+	\begin{itemize}
+		\item Indices start from zero:
+		\lstinputlisting[firstline=4,lastline=5]{examples_annotated_19.py}
+		\item Negative indexing goes from the end of the array, with $-1$ being the last element:
+		\lstinputlisting[firstline=4,lastline=5]{examples_annotated_20.py}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Slice Indexing}
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_18.py}
+	You can access a range of elements using a slice:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_21.py}
+	\begin{itemize}
+		\item The number before the colon is the element the slice starts from
+		\item The number after the colon is \emph{one more than} the element the slice stops at
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Slice Indexing}
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_18.py}
+	\begin{itemize}
+		\item You can specify a stride for the slice:
+		\lstinputlisting[firstline=4,lastline=5]{examples_annotated_22.py}
+		\item As a shorthand, you can omit the start index (it will default to \texttt{0}) and/or the stop index (it will default to \texttt{len(x)}):
+		\lstinputlisting[firstline=4,lastline=7]{examples_annotated_23.py}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Exacting Elements at Specific Indices}
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_18.py}
+	You can use an array (or list) of integers to extract the elements at specific values:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_24.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Boolean Indexing}
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_18.py}
+	\begin{itemize}
+		\item You can use an array (or list) of booleans with the same length as the array to extract specific elements:
+		\lstinputlisting[firstline=4,lastline=5]{examples_annotated_25.py}
+		\item The use of boolean array expressions for indexing is extremely powerful:
+		\lstinputlisting[firstline=4,lastline=5]{examples_annotated_26.py}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Indexing Into 2d Arrays}
+	You can provide a comma-separated list of any of the types of indexing shown above to extract elements from a 2-dimensional array:
+	\lstinputlisting[firstline=4,lastline=10]{examples_annotated_27.py}
+	The first index is the row index, the second index is the column index:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_28.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Indexing Into 2d Arrays}
+	\lstinputlisting[firstline=4,lastline=10]{examples_annotated_27.py}
+	To get all of the entries along a given axis (e.g., an entire row), use the slice operator \texttt{:} with no start, end, or stride indicated:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_29.py}
+	You can omit the trailing \texttt{:} when accessing entire rows:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_30.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Indexing Into Higher-Dimensional Arrays}
+	Pretty much the same as for 2d: provide a comma-separated list of indices, one for each dimension
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_33.py}
+	You can omit any number of trailing \texttt{:}'s:
+	\lstinputlisting[firstline=4,lastline=15]{examples_annotated_34.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Indexing Into Higher-Dimensional Arrays}
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_33.py}
+	You can omit any number of leading \texttt{:}'s by using \texttt{...}:
+	\lstinputlisting[firstline=4,lastline=13]{examples_annotated_35.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Adding New Dimensions With Indexing}
+	You can add a new dimension (with size 1) to an array by including \texttt{np.newaxis} in the index expression:
+	\lstinputlisting[firstline=4,lastline=9]{examples_annotated_36.py}
+	
+	This will be very useful when setting up certain operations
+\end{frame}
+
+\section{Array Operations}
+
+\begin{frame}
+	\frametitle{Vectorization: The Key to Speed}
+	\begin{itemize}
+		\item Almost all NumPy operations are \emph{vectorized}: a single function call causes the same operation to be applied on every element of an array
+		\item This avoids the need to write loops in Python: instead, you let NumPy do the loop in its fast, compiled libraries
+		\item Code which avoids loops will (almost) always be faster than code with loops, and is usually cleaner/easier to understand
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Speed Test: Exponentiation}
+	Let's try squaring a bunch of numbers:
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_37.py}
+	First we do it with a loop:
+	\lstinputlisting[firstline=4,lastline=8]{examples_annotated_38.py}
+	Then with a single line using NumPy's vectorized exponentiation operation:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_40.py}
+	\texttt{square\_loop()} takes \SI{3}{ms}, \texttt{square\_numpy()} takes \SI{5.0}{\micro s}: \emph{the vectorized version is 600$\times$ faster}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unary Operations}
+	Unary operations are applied to each element:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_42.py}
+	Scalar addition:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_43.py}
+	Scalar multiplication:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_44.py}
+	Scalar division:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_45.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unary Operations}
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_42.py}
+	Negation:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_46.py}
+	Exponentiation:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_47.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unary Operations}
+	Some operations are provided as functions instead of operators:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_42.py}
+	Square root:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_48.py}
+	Exponential ($y=e^{x}$):
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_49.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Unary Operations}
+	Some operations are provided as functions instead of operators:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_42.py}
+	(Natural) logarithm (note the warning from taking $\log(0)$):
+	\lstinputlisting[firstline=4,lastline=7]{examples_annotated_50.py}
+	(Trigonometric) sine:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_51.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Binary Operations}
+	\begin{itemize}
+		\item Binary operations act element-by-element
+		\item In their most basic form, this means that the two operands must have the same shape
+		\begin{itemize}
+			\item But we'll see an exception to this when we get to broadcasting
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Examples of Binary Operations}
+	\lstinputlisting[firstline=4,lastline=9]{examples_annotated_52.py}
+	Addition:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_53.py}
+	Division (note warning on divide-by-zero):
+	\lstinputlisting[firstline=4,lastline=7]{examples_annotated_55.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Broadcasting: Binary Operations on Differently-Sized Arrays}
+	\begin{itemize}
+		\item Broadcasting is a powerful syntax for efficiently performing calculations on ``tensor product'' grids of inputs
+		\item It is a very useful tool for removing the need to use loops (and hence dramatically speeding up your code)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Basic Broadcasting Example: $z=xy$}
+	Let's try to compute $z=xy$ over the grid $-1\leq x\leq 0$, $0\leq y\leq 1$:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_57.py}
+	We can't directly multiply \texttt{x} and \texttt{y} because they have different shapes:
+	\lstinputlisting[firstline=6,lastline=6]{examples_annotated_58.py}
+	\lstinputlisting[firstline=11,lastline=14]{examples_annotated_58.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Basic Broadcasting Example: $z=xy$}
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_57.py}
+	We can use \texttt{np.newaxis} to reshape \texttt{x} and \texttt{y}:
+	\lstinputlisting[firstline=4,lastline=9]{examples_annotated_59.py}
+	And this allows us to compute the desired expression:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_60.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{What Just Happened? Full Details of Broadcasting}
+	Two arrays can be \emph{broadcast} together if their shapes are \emph{compatible} according to the following rules:
+	\begin{enumerate}
+		\item If one array has fewer dimensions than the other, add 1's at the \emph{beginning} of the lower-dimensional array's shape
+		\item For each element of the shapes, either:
+		\begin{itemize}
+			\item The two arrays must have the same number of elements along that dimension, or
+			\item One (or both) of the arrays must have 1 element along that dimension
+		\end{itemize}
+	\end{enumerate}
+	Whenever there is a 1 in one array's shape, NumPy pretends that the array has been repeated along that axis however many times are necessary to match the shape of the other array
+\end{frame}
+
+\begin{frame}
+	\frametitle{Example of Broadcasting}
+	Whenever there is a 1 in one array's shape, NumPy pretends that the array has been repeated along that axis however many times are necessary to match the shape of the other array:
+	\lstinputlisting[firstline=4,lastline=12]{examples_annotated_61.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating Information Along Array Axes}
+	\lstinputlisting[firstline=4,lastline=8]{examples_annotated_62.py}
+	
+	Sum of elements:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_63.py}
+	
+	Minimum value:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_64.py}
+	
+	Maximum value:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_65.py}
+	
+	Mean value:
+	\lstinputlisting[firstline=4,lastline=5]{examples_annotated_66.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating in Multidimensional Arrays}
+	On multidimensional arrays, the default behavior is to aggregate across all of the elements of the array to yield a scalar:
+	\lstinputlisting[firstline=4,lastline=6]{examples_annotated_68.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating in Multidimensional Arrays}
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_68.py}
+	You can specify an axis to do the aggregation on -- the result will have one fewer dimension than the input:
+	\lstinputlisting[firstline=4,lastline=8]{examples_annotated_69.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating in Multidimensional Arrays}
+	\lstinputlisting[firstline=4,lastline=4]{examples_annotated_68.py}
+	You can specify also aggregate over multiple dimensions at once:
+	\lstinputlisting[firstline=4,lastline=8]{examples_annotated_70.py}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating Without Removing Dimensions}
+	Suppose we want to normalize each row of a matrix by its 2-norm:
+	\lstinputlisting[firstline=4,lastline=9]{examples_annotated_71.py}
+	\texttt{x} and \texttt{x\_norm} are not compatible: we can't just take \texttt{x/x\_norm}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Aggregating Without Removing Dimensions}
+	Use the \texttt{keepdims} flag to ensure the resulting shapes are compatible:
+	\lstinputlisting[firstline=4,lastline=9]{examples_annotated_72.py}
+\end{frame}
+
+\section{The Scientific Python Ecosystem}
+
+\begin{frame}
+	\frametitle{Doing Stuff With Arrays: The Scientific Python Ecosystem}
+	Many packages use NumPy to move data around and do stuff, here are a few:
+	\begin{itemize}
+		\item NumPy (\url{numpy.org}) itself has subpackages for:
+		\begin{itemize}
+			\item Linear algebra (\texttt{numpy.linalg})
+			\item Taking discrete Fourier transforms (\texttt{numpy.fft})
+			\item Generating random numbers (\texttt{numpy.random})
+		\end{itemize}
+		\item SciPy (\url{scipy.org}) was developed jointly with NumPy, and provides many high-level routines, including:
+		\begin{itemize}
+			\item Numeric integration (including ODE solvers) (\texttt{scipy.integrate})
+			\item Optimization (\texttt{scipy.optimize})
+			\item Interpolation/smoothing (\texttt{scipy.interpolate})
+			\item Statistics (\texttt{scipy.stats})
+		\end{itemize}
+		\item Matplotlib (\url{matplotlib.org}) provides a variety of plotting routines
+		\item scikit-learn (\url{scikit-learn.org}) provides a huge range of machine learning algorithms and supporting tools
+	\end{itemize}
+\end{frame}
+
+\end{document}

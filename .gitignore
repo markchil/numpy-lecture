@@ -2,3 +2,10 @@ src/.ipynb_checkpoints
 src/cell_files
 src/examples.py
 src/examples_annotated.py
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.gz
+*.toc
